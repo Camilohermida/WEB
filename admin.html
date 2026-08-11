@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>BLÜM GROUP — Panel de administración</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap">
+<style>
+  :root{--g:#2C2C2C;--v:#6B8E6B;--vl:#8fa68f;--bg:#F8F8F8;--w:#ffffff;--gr:#888;--ln:#e0e0e0;--err:#c0392b;}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--g);}
+  header{background:var(--g);color:#fff;padding:1.1rem 2rem;display:flex;justify-content:space-between;align-items:center;}
+  header h1{font-size:1.1rem;font-weight:500;letter-spacing:.5px;}
+  header button{background:transparent;border:1px solid rgba(255,255,255,.3);color:#fff;padding:.5rem 1rem;border-radius:6px;cursor:pointer;font-size:.8rem;}
+  header button:hover{background:rgba(255,255,255,.1);}
+  .wrap{max-width:960px;margin:0 auto;padding:2rem 1.5rem 4rem;}
+
+  /* LOGIN */
+  #loginView{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:1.5rem;}
+  .login-box{background:#fff;padding:2.5rem;border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,.08);width:100%;max-width:360px;}
+  .login-box h2{font-size:1.3rem;margin-bottom:.4rem;font-weight:500;}
+  .login-box p{font-size:.85rem;color:var(--gr);margin-bottom:1.5rem;}
+  .login-box input{width:100%;padding:.75rem .9rem;border:1px solid var(--ln);border-radius:8px;margin-bottom:.9rem;font-size:.9rem;font-family:inherit;}
+  .login-box button{width:100%;padding:.8rem;background:var(--g);color:#fff;border:none;border-radius:8px;font-size:.85rem;cursor:pointer;letter-spacing:.5px;}
+  .login-box button:hover{background:var(--v);}
+  #loginError{color:var(--err);font-size:.8rem;margin-top:.7rem;min-height:1.2em;}
+
+  /* TABS */
+  .tabs{display:flex;gap:.5rem;margin-bottom:2rem;flex-wrap:wrap;}
+  .tab{padding:.6rem 1.2rem;border-radius:20px;background:#fff;border:1px solid var(--ln);cursor:pointer;font-size:.8rem;font-weight:500;}
+  .tab.active{background:var(--g);color:#fff;border-color:var(--g);}
+  .panel{display:none;}
+  .panel.active{display:block;}
+
+  .card{background:#fff;border-radius:12px;padding:1.5rem;margin-bottom:1.2rem;box-shadow:0 2px 12px rgba(0,0,0,.04);}
+  .card h3{font-size:.95rem;font-weight:500;margin-bottom:1rem;}
+  label{display:block;font-size:.75rem;color:var(--gr);margin-bottom:.3rem;margin-top:.8rem;text-transform:uppercase;letter-spacing:.5px;}
+  label:first-child{margin-top:0;}
+  input[type=text], input[type=number], textarea{width:100%;padding:.65rem .8rem;border:1px solid var(--ln);border-radius:6px;font-size:.88rem;font-family:inherit;}
+  textarea{resize:vertical;min-height:70px;}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:1rem;}
+  .btn{display:inline-block;padding:.65rem 1.4rem;border-radius:6px;border:none;font-size:.8rem;cursor:pointer;font-weight:500;letter-spacing:.3px;}
+  .btn-primary{background:var(--g);color:#fff;}
+  .btn-primary:hover{background:var(--v);}
+  .btn-danger{background:transparent;color:var(--err);border:1px solid var(--err);}
+  .btn-danger:hover{background:var(--err);color:#fff;}
+  .btn-ghost{background:transparent;color:var(--g);border:1px solid var(--ln);}
+  .actions{display:flex;gap:.6rem;margin-top:1.2rem;}
+  .item{border:1px solid var(--ln);border-radius:8px;padding:1rem;margin-bottom:.8rem;display:flex;justify-content:space-between;gap:1rem;align-items:flex-start;}
+  .item-body{flex:1;}
+  .item-title{font-weight:500;font-size:.88rem;}
+  .item-sub{font-size:.78rem;color:var(--gr);margin-top:.2rem;}
+  .item-actions{display:flex;gap:.5rem;flex-shrink:0;}
+  .item-actions button{padding:.4rem .8rem;font-size:.72rem;border-radius:5px;border:1px solid var(--ln);background:#fff;cursor:pointer;}
+  .item-actions button.del{color:var(--err);border-color:var(--err);}
+  .toast{position:fixed;bottom:1.5rem;right:1.5rem;background:var(--g);color:#fff;padding:.9rem 1.4rem;border-radius:8px;font-size:.85rem;opacity:0;transform:translateY(10px);transition:all .25s;pointer-events:none;z-index:999;}
+  .toast.show{opacity:1;transform:translateY(0);}
+  .empty{color:var(--gr);font-size:.85rem;text-align:center;padding:1.5rem 0;}
+  .hint{font-size:.75rem;color:var(--gr);margin-top:1rem;}
+</style>
+</head>
+<body>
+
+<div id="loginView">
+  <div class="login-box">
+    <h2>BLÜM GROUP</h2>
+    <p>Panel de administración — inicia sesión</p>
+    <input type="text" id="loginEmail" placeholder="Correo electrónico" autocomplete="username">
+    <input type="password" id="loginPass" placeholder="Contraseña" autocomplete="current-password">
+    <button onclick="doLogin()">Entrar</button>
+    <div id="loginError"></div>
+  </div>
+</div>
+
+<div id="appView" style="display:none;">
+  <header>
+    <h1>BLÜM GROUP · Admin</h1>
+    <button onclick="doLogout()">Cerrar sesión</button>
+  </header>
+  <div class="wrap">
+    <div class="tabs">
+      <div class="tab active" data-tab="general">Textos generales</div>
+      <div class="tab" data-tab="properties">Propiedades</div>
+      <div class="tab" data-tab="testimonials">Testimonios</div>
+      <div class="tab" data-tab="faq">FAQ</div>
+    </div>
+
+    <!-- GENERAL -->
+    <div class="panel active" id="panel-general">
+      <div class="card">
+        <h3>Hero</h3>
+        <label>Texto sobre el título (eyebrow)</label>
+        <input type="text" id="g_heroEyebrow">
+        <label>Título principal</label>
+        <textarea id="g_heroTitle"></textarea>
+        <label>Subtítulo</label>
+        <textarea id="g_heroSub"></textarea>
+        <div class="row2">
+          <div><label>Métrica 1 — valor</label><input type="text" id="g_m1v"></div>
+          <div><label>Métrica 1 — etiqueta</label><input type="text" id="g_m1l"></div>
+        </div>
+        <div class="row2">
+          <div><label>Métrica 2 — valor</label><input type="text" id="g_m2v"></div>
+          <div><label>Métrica 2 — etiqueta</label><input type="text" id="g_m2l"></div>
+        </div>
+        <div class="row2">
+          <div><label>Métrica 3 — valor</label><input type="text" id="g_m3v"></div>
+          <div><label>Métrica 3 — etiqueta</label><input type="text" id="g_m3l"></div>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Modelo de comisión</h3>
+        <label>Número de comisión (ej. 20)</label>
+        <input type="text" id="g_commNum">
+        <label>Texto descriptivo</label>
+        <textarea id="g_commText"></textarea>
+      </div>
+      <div class="card">
+        <h3>Contacto</h3>
+        <div class="row2">
+          <div><label>WhatsApp (solo números, con código país)</label><input type="text" id="g_wa"></div>
+          <div><label>Correo</label><input type="text" id="g_email"></div>
+        </div>
+        <label>Instagram (usuario, sin @)</label>
+        <input type="text" id="g_ig">
+      </div>
+      <div class="actions">
+        <button class="btn btn-primary" onclick="saveGeneral()">Guardar cambios</button>
+      </div>
+      <p class="hint">Estos campos alimentan las secciones principales del sitio. Los cambios se reflejan al instante para los visitantes.</p>
+    </div>
+
+    <!-- PROPERTIES -->
+    <div class="panel" id="panel-properties">
+      <div class="card">
+        <h3 id="propFormTitle">Agregar propiedad</h3>
+        <input type="hidden" id="p_id">
+        <label>Título</label>
+        <input type="text" id="p_title" placeholder="2BR Cómodo + Piscina">
+        <div class="row2">
+          <div><label>Ubicación</label><input type="text" id="p_loc" placeholder="Barranquilla, Norte"></div>
+          <div><label>Calificación</label><input type="text" id="p_rating" placeholder="4.9"></div>
+        </div>
+        <label>Amenidades (separadas por ·)</label>
+        <input type="text" id="p_amenities" placeholder="Wifi · Parque Infantil">
+        <label>URL de imagen (opcional)</label>
+        <input type="text" id="p_img" placeholder="https://...">
+        <label>Orden (número, menor aparece primero)</label>
+        <input type="number" id="p_order" value="0">
+        <div class="actions">
+          <button class="btn btn-primary" onclick="saveProperty()">Guardar</button>
+          <button class="btn btn-ghost" onclick="resetPropertyForm()">Cancelar</button>
+        </div>
+      </div>
+      <div id="propertiesList"></div>
+    </div>
+
+    <!-- TESTIMONIALS -->
+    <div class="panel" id="panel-testimonials">
+      <div class="card">
+        <h3 id="testFormTitle">Agregar testimonio</h3>
+        <input type="hidden" id="t_id">
+        <div class="row2">
+          <div><label>Nombre</label><input type="text" id="t_name"></div>
+          <div><label>Calificación (1-5)</label><input type="number" id="t_rating" min="1" max="5" value="5"></div>
+        </div>
+        <label>Texto de la reseña</label>
+        <textarea id="t_text"></textarea>
+        <label>Orden</label>
+        <input type="number" id="t_order" value="0">
+        <div class="actions">
+          <button class="btn btn-primary" onclick="saveTestimonial()">Guardar</button>
+          <button class="btn btn-ghost" onclick="resetTestimonialForm()">Cancelar</button>
+        </div>
+      </div>
+      <div id="testimonialsList"></div>
+    </div>
+
+    <!-- FAQ -->
+    <div class="panel" id="panel-faq">
+      <div class="card">
+        <h3 id="faqFormTitle">Agregar pregunta</h3>
+        <input type="hidden" id="f_id">
+        <label>Pregunta</label>
+        <input type="text" id="f_q">
+        <label>Respuesta</label>
+        <textarea id="f_a"></textarea>
+        <label>Orden</label>
+        <input type="number" id="f_order" value="0">
+        <div class="actions">
+          <button class="btn btn-primary" onclick="saveFaq()">Guardar</button>
+          <button class="btn btn-ghost" onclick="resetFaqForm()">Cancelar</button>
+        </div>
+      </div>
+      <div id="faqList"></div>
+    </div>
+
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="firebase-config.js"></script>
+<script>
+function toast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2200);
+}
+
+/* ---------- AUTH ---------- */
+function doLogin(){
+  const email = document.getElementById('loginEmail').value.trim();
+  const pass = document.getElementById('loginPass').value;
+  document.getElementById('loginError').textContent = '';
+  auth.signInWithEmailAndPassword(email, pass).catch(err=>{
+    document.getElementById('loginError').textContent = 'No se pudo iniciar sesión: ' + (err.message || err.code);
+  });
+}
+function doLogout(){ auth.signOut(); }
+
+auth.onAuthStateChanged(user=>{
+  if(user){
+    document.getElementById('loginView').style.display = 'none';
+    document.getElementById('appView').style.display = 'block';
+    loadGeneral();
+    loadProperties();
+    loadTestimonials();
+    loadFaqs();
+  } else {
+    document.getElementById('loginView').style.display = 'flex';
+    document.getElementById('appView').style.display = 'none';
+  }
+});
+
+/* ---------- TABS ---------- */
+document.querySelectorAll('.tab').forEach(tab=>{
+  tab.addEventListener('click', ()=>{
+    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('panel-' + tab.dataset.tab).classList.add('active');
+  });
+});
+
+/* ---------- GENERAL CONTENT ---------- */
+function loadGeneral(){
+  db.collection('site_content').doc('general').get().then(doc=>{
+    if(!doc.exists) return;
+    const d = doc.data();
+    document.getElementById('g_heroEyebrow').value = d.heroEyebrow || '';
+    document.getElementById('g_heroTitle').value = d.heroTitle || '';
+    document.getElementById('g_heroSub').value = d.heroSub || '';
+    document.getElementById('g_m1v').value = d.m1v || '';
+    document.getElementById('g_m1l').value = d.m1l || '';
+    document.getElementById('g_m2v').value = d.m2v || '';
+    document.getElementById('g_m2l').value = d.m2l || '';
+    document.getElementById('g_m3v').value = d.m3v || '';
+    document.getElementById('g_m3l').value = d.m3l || '';
+    document.getElementById('g_commNum').value = d.commNum || '';
+    document.getElementById('g_commText').value = d.commText || '';
+    document.getElementById('g_wa').value = d.wa || '';
+    document.getElementById('g_email').value = d.email || '';
+    document.getElementById('g_ig').value = d.ig || '';
+  }).catch(err=>toast('Error cargando textos: ' + err.message));
+}
+function saveGeneral(){
+  const data = {
+    heroEyebrow: document.getElementById('g_heroEyebrow').value,
+    heroTitle: document.getElementById('g_heroTitle').value,
+    heroSub: document.getElementById('g_heroSub').value,
+    m1v: document.getElementById('g_m1v').value,
+    m1l: document.getElementById('g_m1l').value,
+    m2v: document.getElementById('g_m2v').value,
+    m2l: document.getElementById('g_m2l').value,
+    m3v: document.getElementById('g_m3v').value,
+    m3l: document.getElementById('g_m3l').value,
+    commNum: document.getElementById('g_commNum').value,
+    commText: document.getElementById('g_commText').value,
+    wa: document.getElementById('g_wa').value,
+    email: document.getElementById('g_email').value,
+    ig: document.getElementById('g_ig').value,
+    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+  };
+  db.collection('site_content').doc('general').set(data, {merge:true})
+    .then(()=>toast('Textos guardados'))
+    .catch(err=>toast('Error: ' + err.message));
+}
+
+/* ---------- PROPERTIES ---------- */
+function resetPropertyForm(){
+  document.getElementById('p_id').value = '';
+  document.getElementById('p_title').value = '';
+  document.getElementById('p_loc').value = '';
+  document.getElementById('p_rating').value = '';
+  document.getElementById('p_amenities').value = '';
+  document.getElementById('p_img').value = '';
+  document.getElementById('p_order').value = 0;
+  document.getElementById('propFormTitle').textContent = 'Agregar propiedad';
+}
+function saveProperty(){
+  const id = document.getElementById('p_id').value;
+  const data = {
+    title: document.getElementById('p_title').value,
+    loc: document.getElementById('p_loc').value,
+    rating: document.getElementById('p_rating').value,
+    amenities: document.getElementById('p_amenities').value,
+    img: document.getElementById('p_img').value,
+    order: Number(document.getElementById('p_order').value) || 0
+  };
+  if(!data.title){ toast('El título es obligatorio'); return; }
+  const ref = id ? db.collection('properties').doc(id) : db.collection('properties').doc();
+  ref.set(data, {merge:true})
+    .then(()=>{ toast('Propiedad guardada'); resetPropertyForm(); loadProperties(); })
+    .catch(err=>toast('Error: ' + err.message));
+}
+function editProperty(id, data){
+  document.getElementById('p_id').value = id;
+  document.getElementById('p_title').value = data.title || '';
+  document.getElementById('p_loc').value = data.loc || '';
+  document.getElementById('p_rating').value = data.rating || '';
+  document.getElementById('p_amenities').value = data.amenities || '';
+  document.getElementById('p_img').value = data.img || '';
+  document.getElementById('p_order').value = data.order || 0;
+  document.getElementById('propFormTitle').textContent = 'Editar propiedad';
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+function deleteProperty(id){
+  if(!confirm('¿Eliminar esta propiedad?')) return;
+  db.collection('properties').doc(id).delete()
+    .then(()=>{ toast('Propiedad eliminada'); loadProperties(); })
+    .catch(err=>toast('Error: ' + err.message));
+}
+function loadProperties(){
+  db.collection('properties').orderBy('order').get().then(snap=>{
+    const list = document.getElementById('propertiesList');
+    list.innerHTML = '';
+    if(snap.empty){ list.innerHTML = '<p class="empty">No hay propiedades aún.</p>'; return; }
+    snap.forEach(doc=>{
+      const d = doc.data();
+      const el = document.createElement('div');
+      el.className = 'item';
+      el.innerHTML = `
+        <div class="item-body">
+          <div class="item-title">${escapeHtml(d.title||'')} — ★ ${escapeHtml(d.rating||'')}</div>
+          <div class="item-sub">${escapeHtml(d.loc||'')} · ${escapeHtml(d.amenities||'')}</div>
+        </div>
+        <div class="item-actions">
+          <button onclick='editProperty("${doc.id}", ${JSON.stringify(d).replace(/'/g,"&#39;")})'>Editar</button>
+          <button class="del" onclick="deleteProperty('${doc.id}')">Eliminar</button>
+        </div>`;
+      list.appendChild(el);
+    });
+  }).catch(err=>toast('Error cargando propiedades: ' + err.message));
+}
+
+/* ---------- TESTIMONIALS ---------- */
+function resetTestimonialForm(){
+  document.getElementById('t_id').value = '';
+  document.getElementById('t_name').value = '';
+  document.getElementById('t_rating').value = 5;
+  document.getElementById('t_text').value = '';
+  document.getElementById('t_order').value = 0;
+  document.getElementById('testFormTitle').textContent = 'Agregar testimonio';
+}
+function saveTestimonial(){
+  const id = document.getElementById('t_id').value;
+  const data = {
+    name: document.getElementById('t_name').value,
+    rating: Number(document.getElementById('t_rating').value) || 5,
+    text: document.getElementById('t_text').value,
+    order: Number(document.getElementById('t_order').value) || 0
+  };
+  if(!data.name || !data.text){ toast('Nombre y texto son obligatorios'); return; }
+  const ref = id ? db.collection('testimonials').doc(id) : db.collection('testimonials').doc();
+  ref.set(data, {merge:true})
+    .then(()=>{ toast('Testimonio guardado'); resetTestimonialForm(); loadTestimonials(); })
+    .catch(err=>toast('Error: ' + err.message));
+}
+function editTestimonial(id, data){
+  document.getElementById('t_id').value = id;
+  document.getElementById('t_name').value = data.name || '';
+  document.getElementById('t_rating').value = data.rating || 5;
+  document.getElementById('t_text').value = data.text || '';
+  document.getElementById('t_order').value = data.order || 0;
+  document.getElementById('testFormTitle').textContent = 'Editar testimonio';
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+function deleteTestimonial(id){
+  if(!confirm('¿Eliminar este testimonio?')) return;
+  db.collection('testimonials').doc(id).delete()
+    .then(()=>{ toast('Testimonio eliminado'); loadTestimonials(); })
+    .catch(err=>toast('Error: ' + err.message));
+}
+function loadTestimonials(){
+  db.collection('testimonials').orderBy('order').get().then(snap=>{
+    const list = document.getElementById('testimonialsList');
+    list.innerHTML = '';
+    if(snap.empty){ list.innerHTML = '<p class="empty">No hay testimonios aún.</p>'; return; }
+    snap.forEach(doc=>{
+      const d = doc.data();
+      const el = document.createElement('div');
+      el.className = 'item';
+      el.innerHTML = `
+        <div class="item-body">
+          <div class="item-title">${escapeHtml(d.name||'')} — ${'★'.repeat(d.rating||5)}</div>
+          <div class="item-sub">${escapeHtml((d.text||'').slice(0,90))}${(d.text||'').length>90?'…':''}</div>
+        </div>
+        <div class="item-actions">
+          <button onclick='editTestimonial("${doc.id}", ${JSON.stringify(d).replace(/'/g,"&#39;")})'>Editar</button>
+          <button class="del" onclick="deleteTestimonial('${doc.id}')">Eliminar</button>
+        </div>`;
+      list.appendChild(el);
+    });
+  }).catch(err=>toast('Error cargando testimonios: ' + err.message));
+}
+
+/* ---------- FAQ ---------- */
+function resetFaqForm(){
+  document.getElementById('f_id').value = '';
+  document.getElementById('f_q').value = '';
+  document.getElementById('f_a').value = '';
+  document.getElementById('f_order').value = 0;
+  document.getElementById('faqFormTitle').textContent = 'Agregar pregunta';
+}
+function saveFaq(){
+  const id = document.getElementById('f_id').value;
+  const data = {
+    q: document.getElementById('f_q').value,
+    a: document.getElementById('f_a').value,
+    order: Number(document.getElementById('f_order').value) || 0
+  };
+  if(!data.q || !data.a){ toast('Pregunta y respuesta son obligatorias'); return; }
+  const ref = id ? db.collection('faq').doc(id) : db.collection('faq').doc();
+  ref.set(data, {merge:true})
+    .then(()=>{ toast('Pregunta guardada'); resetFaqForm(); loadFaqs(); })
+    .catch(err=>toast('Error: ' + err.message));
+}
+function editFaq(id, data){
+  document.getElementById('f_id').value = id;
+  document.getElementById('f_q').value = data.q || '';
+  document.getElementById('f_a').value = data.a || '';
+  document.getElementById('f_order').value = data.order || 0;
+  document.getElementById('faqFormTitle').textContent = 'Editar pregunta';
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+function deleteFaq(id){
+  if(!confirm('¿Eliminar esta pregunta?')) return;
+  db.collection('faq').doc(id).delete()
+    .then(()=>{ toast('Pregunta eliminada'); loadFaqs(); })
+    .catch(err=>toast('Error: ' + err.message));
+}
+function loadFaqs(){
+  db.collection('faq').orderBy('order').get().then(snap=>{
+    const list = document.getElementById('faqList');
+    list.innerHTML = '';
+    if(snap.empty){ list.innerHTML = '<p class="empty">No hay preguntas aún.</p>'; return; }
+    snap.forEach(doc=>{
+      const d = doc.data();
+      const el = document.createElement('div');
+      el.className = 'item';
+      el.innerHTML = `
+        <div class="item-body">
+          <div class="item-title">${escapeHtml(d.q||'')}</div>
+          <div class="item-sub">${escapeHtml((d.a||'').slice(0,90))}${(d.a||'').length>90?'…':''}</div>
+        </div>
+        <div class="item-actions">
+          <button onclick='editFaq("${doc.id}", ${JSON.stringify(d).replace(/'/g,"&#39;")})'>Editar</button>
+          <button class="del" onclick="deleteFaq('${doc.id}')">Eliminar</button>
+        </div>`;
+      list.appendChild(el);
+    });
+  }).catch(err=>toast('Error cargando FAQ: ' + err.message));
+}
+
+function escapeHtml(str){
+  return String(str).replace(/[&<>"']/g, s=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s]));
+}
+</script>
+</body>
+</html>
